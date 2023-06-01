@@ -8,7 +8,7 @@ import (
 )
 
 type FileSeeker interface {
-	SeekFiles() ([]string, error)
+	SeekFiles() ([]File, error)
 }
 
 type fileSeekerImpl struct {
@@ -19,8 +19,8 @@ type fileSeekerImpl struct {
 	includeSubdirs bool
 }
 
-func (fs *fileSeekerImpl) SeekFiles() ([]string, error) {
-	var files []string
+func (fs *fileSeekerImpl) SeekFiles() ([]File, error) {
+	var files []File
 
 	entries, err := os.ReadDir(fs.folderPath)
 	if err != nil {
@@ -41,11 +41,14 @@ func (fs *fileSeekerImpl) SeekFiles() ([]string, error) {
 			files = append(files, subfolderFiles...)
 		} else {
 			if len(fs.patterns) == 0 && len(fs.fileExtensions) == 0 {
-				files = append(files, filepath.Join(fs.folderPath, entry.Name()))
+				filePath := filepath.Join(fs.folderPath, entry.Name())
+				file := NewFile(filePath)
+				files = append(files, file)
 			} else {
 				filePath := filepath.Join(fs.folderPath, entry.Name())
 				if fs.matchesPattern(filePath) || fs.matchesExtension(entry.Name()) {
-					files = append(files, filePath)
+					file := NewFile(filePath)
+					files = append(files, file)
 				}
 			}
 		}
