@@ -51,7 +51,7 @@ import (
 func main() {
 	// Create a FileSeekerBuilder
 	builder := fileseeker.NewFileSeekerBuilder("/path/to/folder").
-		Patterns([]string{"*.txt"}). //you can find files with regexp
+		Patterns([]string{"^*.txt"}). //you can find files with regexp
 		FileExtensions([]string{"jpg", "png"}). //or extension based and if you use both it will find both
 		ExcludeSubdirs() //dont check subdirs, default is true so dont use it if you want check subdirs
 
