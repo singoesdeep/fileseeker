@@ -15,13 +15,8 @@ Give FileSeeker a try and simplify your file searching tasks in Go!
 - [x] Implement regular expression pattern matching for file filtering
 - [x] Add option to exclude subdirectories from seeking
 - [ ] Add option to exclude specific files/subdirs
-- [ ] Add more examples demonstrating different usage scenarios
-- [ ] Provide benchmark tests and performance optimizations
-- [ ] Add support for custom filters and sorting options
-- [ ] Include more comprehensive documentation and usage guidelines
-- [ ] Implement additional error handling and robustness checks
 - [ ] Support parallel file seeking for improved performance
-- [ ] Add support for file metadata extraction (e.g., file size, modification time)
+- [x] Add support for file metadata extraction (e.g., file size, modification time)
 
 Feel free to contribute by tackling any of the above tasks. If you have any other ideas or suggestions, please open an issue or reach out with your thoughts. Your contributions are greatly appreciated!
 
@@ -71,12 +66,90 @@ func main() {
 }
 ```
 
+### Will Return
+```
+{file.go file.go go 1912 2023-06-02 18:53:02.7379161 +0300 +03 -rw-rw-rw-}
+{fileseeker.go fileseeker.go go 2084 2023-06-02 17:53:54.9805177 +0300 +03 -rw-rw-rw-}
+{fileseeker_builder.go fileseeker_builder.go go 1896 2023-06-02 18:38:45.5054916 +0300 +03 -rw-rw-rw-}
+{fileseeker_builder_test.go fileseeker_builder_test.go go 2459 2023-06-02 15:49:08.48243 +0300 +03 -rw-rw-rw-}
+{fileseeker_config.go fileseeker_config.go go 244 2023-06-02 17:50:07.9253496 +0300 +03 -rw-rw-rw-}
+{fileseeker_test.go fileseeker_test.go go 2190 2023-06-02 15:48:26.9262423 +0300 +03 -rw-rw-rw-}
+```
+---------------------------------------
+---------------------------------------
+```go
+package main
+
+import (
+	"fmt"
+	"strconv"
+	"time"
+
+	"github.com/fatih/color"
+	"github.com/rodaine/table"
+	"github.com/singoesdeep/fileseeker"
+)
+
+func main() {
+	headerFmt := color.New(color.FgGreen, color.Underline).SprintfFunc()
+	columnFmt := color.New(color.FgYellow).SprintfFunc()
+
+	tbl := table.New("#", "Path", "Name", "Ext", "Size", "ModDate", "Perms")
+	tbl.WithHeaderFormatter(headerFmt).WithFirstColumnFormatter(columnFmt)
+
+	// Create a FileSeekerBuilder
+	builder := fileseeker.NewFileSeekerBuilder("./").
+		ExcludeSubdirs().                                       //pass subdirs
+		Patterns([]string{"^*.go", "^go.mod"}).                 //regexp pattern matching
+		SizeRangeFilter([2]int64{1, fileseeker.MAX_FILE_SIZE}). //min and max bytes for filtering
+		ModificationDateRangeFilter([2]time.Time{fileseeker.MIN_DATE_TIME, fileseeker.MAX_DATE_TIME})
+
+	// Build the FileSeeker
+	seeker := builder.Build()
+
+	// Seek files
+	files, err := seeker.SeekFiles()
+	if err != nil {
+		fmt.Printf("Error: %v\n", err)
+		return
+	}
+
+	// Print the found files
+	for i, file := range files {
+		tbl.AddRow(
+			strconv.Itoa(i+1),
+			file.String()[0],
+			file.String()[1],
+			file.String()[2],
+			file.String()[3],
+			file.String()[4],
+			file.String()[5],
+		)
+		fmt.Println()
+	}
+
+	tbl.Print()
+}
+```
+### Will Return
+| # | Path                        | Name                        | Ext | Size | ModDate              | Perms     |
+|---|-----------------------------|-----------------------------|-----|------|----------------------|-----------|
+| 1 | file.go                     | file.go                     | go  | 1912 | 2023-06-02 18:53:02  | rw-rw-rw- |
+| 2 | fileseeker.go               | fileseeker.go               | go  | 2084 | 2023-06-02 17:53:54  | rw-rw-rw- |
+| 3 | fileseeker_builder.go       | fileseeker_builder.go       | go  | 1896 | 2023-06-02 18:38:45  | rw-rw-rw- |
+| 4 | fileseeker_builder_test.go  | fileseeker_builder_test.go  | go  | 2459 | 2023-06-02 15:49:08  | rw-rw-rw- |
+| 5 | fileseeker_config.go        | fileseeker_config.go        | go  | 244  | 2023-06-02 17:50:07  | rw-rw-rw- |
+| 6 | fileseeker_test.go          | fileseeker_test.go          | go  | 2190 | 2023-06-02 15:48:26  | rw-rw-rw- |
+| 7 | go.mod                      | go.mod                      | mod | 288  | 2023-06-02 18:44:12  | rw-rw-rw- |
+
+
 ## Features
 
 - Seek files within a specified folder
-- Filter files by patterns and extensions
 - Include or exclude subdirectories
 - Supports regular expression pattern matching
+- Supports file size range filtering
+- Supports modification date range filtering
 
 ## Documentation
 

@@ -4,6 +4,7 @@ import (
 	"os"
 	"path/filepath"
 	"regexp"
+	"time"
 )
 
 type FileSeeker interface {
@@ -15,6 +16,7 @@ type fileSeekerImpl struct {
 }
 
 func (fs *fileSeekerImpl) SeekFiles() ([]File, error) {
+	var filesTemp []File
 	var files []File
 
 	entries, err := os.ReadDir(fs.fsc.folderPath)
@@ -32,22 +34,27 @@ func (fs *fileSeekerImpl) SeekFiles() ([]File, error) {
 			if err != nil {
 				return nil, err
 			}
-			files = append(files, subfolderFiles...)
+			filesTemp = append(filesTemp, subfolderFiles...)
 		} else {
 			if len(fs.fsc.patterns) > 0 {
 				filePath := filepath.Join(fs.fsc.folderPath, entry.Name())
 				if fs.matchesPattern(filePath) {
 					file := NewFile(filePath)
-					files = append(files, file)
+					filesTemp = append(filesTemp, file)
 				}
 			} else {
 				filePath := filepath.Join(fs.fsc.folderPath, entry.Name())
 				file := NewFile(filePath)
-				files = append(files, file)
+				filesTemp = append(filesTemp, file)
 			}
 		}
 	}
-
+	for _, file := range filesTemp {
+		if filterTimeRange(file.ModificationDate, fs.fsc.modificationDateRange) &&
+			filterSizeRange(file.Size, fs.fsc.sizeRange) {
+			files = append(files, file)
+		}
+	}
 	return files, nil
 }
 
@@ -57,7 +64,7 @@ func (fs *fileSeekerImpl) matchesPattern(filePath string) bool {
 	}
 
 	for _, pattern := range fs.fsc.patterns {
-		if fs.matchPattern(pattern, filePath) {
+		if matchPattern(pattern, filePath) {
 			return true
 		}
 	}
@@ -65,7 +72,7 @@ func (fs *fileSeekerImpl) matchesPattern(filePath string) bool {
 	return false
 }
 
-func (fsi *fileSeekerImpl) matchPattern(pattern, filePath string) bool {
+func matchPattern(pattern, filePath string) bool {
 	regExp, err := regexp.Compile(pattern)
 
 	if err != nil {
@@ -73,4 +80,18 @@ func (fsi *fileSeekerImpl) matchPattern(pattern, filePath string) bool {
 	}
 
 	return regExp.MatchString(filePath)
+}
+
+func filterTimeRange(ft time.Time, t [2]time.Time) bool {
+	if ft.After(t[0]) && ft.Before(t[1]) {
+		return true
+	}
+	return false
+}
+
+func filterSizeRange(fs int64, s [2]int64) bool {
+	if fs >= s[0] && fs <= s[1] {
+		return true
+	}
+	return false
 }
