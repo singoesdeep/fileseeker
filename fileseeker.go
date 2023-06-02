@@ -49,12 +49,16 @@ func (fs *fileSeekerImpl) SeekFiles() ([]File, error) {
 			}
 		}
 	}
-	for _, file := range filesTemp {
-		if filterTimeRange(file.ModificationDate, fs.fsc.modificationDateRange) &&
-			filterSizeRange(file.Size, fs.fsc.sizeRange) {
-			files = append(files, file)
+	if fs.fsc.sizeRange != [2]int64{MIN_FILE_SIZE, MAX_FILE_SIZE} ||
+		fs.fsc.modificationDateRange != [2]time.Time{MIN_DATE_TIME, MAX_DATE_TIME} {
+		for _, file := range filesTemp {
+			if filterTimeRange(file.ModificationDate, fs.fsc.modificationDateRange) &&
+				filterSizeRange(file.Size, fs.fsc.sizeRange) {
+				files = append(files, file)
+			}
 		}
 	}
+
 	return files, nil
 }
 
