@@ -12,27 +12,23 @@ type FileSeeker interface {
 }
 
 type fileSeekerImpl struct {
-	folderPath     string
-	patterns       []string
-	fileExtensions []string
-	useRegExp      bool
-	includeSubdirs bool
+	fsc fileSeekerConfig
 }
 
 func (fs *fileSeekerImpl) SeekFiles() ([]File, error) {
 	var files []File
 
-	entries, err := os.ReadDir(fs.folderPath)
+	entries, err := os.ReadDir(fs.fsc.folderPath)
 	if err != nil {
 		return nil, err
 	}
 
 	for _, entry := range entries {
-		if entry.IsDir() && fs.includeSubdirs {
-			subfolderPath := filepath.Join(fs.folderPath, entry.Name())
+		if entry.IsDir() && fs.fsc.includeSubdirs {
+			subfolderPath := filepath.Join(fs.fsc.folderPath, entry.Name())
 			subfolderFiles, err := NewFileSeekerBuilder(subfolderPath).
-				Patterns(fs.patterns).
-				FileExtensions(fs.fileExtensions).
+				Patterns(fs.fsc.patterns).
+				FileExtensions(fs.fsc.fileExtensions).
 				Build().
 				SeekFiles()
 			if err != nil {
@@ -40,12 +36,12 @@ func (fs *fileSeekerImpl) SeekFiles() ([]File, error) {
 			}
 			files = append(files, subfolderFiles...)
 		} else {
-			if len(fs.patterns) == 0 && len(fs.fileExtensions) == 0 {
-				filePath := filepath.Join(fs.folderPath, entry.Name())
+			if len(fs.fsc.patterns) == 0 && len(fs.fsc.fileExtensions) == 0 {
+				filePath := filepath.Join(fs.fsc.folderPath, entry.Name())
 				file := NewFile(filePath)
 				files = append(files, file)
 			} else {
-				filePath := filepath.Join(fs.folderPath, entry.Name())
+				filePath := filepath.Join(fs.fsc.folderPath, entry.Name())
 				if fs.matchesPattern(filePath) || fs.matchesExtension(entry.Name()) {
 					file := NewFile(filePath)
 					files = append(files, file)
@@ -58,11 +54,11 @@ func (fs *fileSeekerImpl) SeekFiles() ([]File, error) {
 }
 
 func (fs *fileSeekerImpl) matchesPattern(filePath string) bool {
-	if !fs.useRegExp || len(fs.patterns) == 0 {
+	if !fs.fsc.useRegExp || len(fs.fsc.patterns) == 0 {
 		return false
 	}
 
-	for _, pattern := range fs.patterns {
+	for _, pattern := range fs.fsc.patterns {
 		if fs.matchPattern(pattern, filePath) {
 			return true
 		}
@@ -71,7 +67,7 @@ func (fs *fileSeekerImpl) matchesPattern(filePath string) bool {
 	return false
 }
 
-func (fs *fileSeekerImpl) matchPattern(pattern, filePath string) bool {
+func (fsi *fileSeekerImpl) matchPattern(pattern, filePath string) bool {
 	regExp, err := regexp.Compile(pattern)
 
 	if err != nil {
@@ -82,13 +78,13 @@ func (fs *fileSeekerImpl) matchPattern(pattern, filePath string) bool {
 }
 
 func (fs *fileSeekerImpl) matchesExtension(fileName string) bool {
-	if len(fs.fileExtensions) == 0 {
+	if len(fs.fsc.fileExtensions) == 0 {
 		return false
 	}
 
 	extension := strings.TrimPrefix(filepath.Ext(fileName), ".")
 
-	for _, ext := range fs.fileExtensions {
+	for _, ext := range fs.fsc.fileExtensions {
 		if extension == ext {
 			return true
 		}

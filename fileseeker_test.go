@@ -20,11 +20,13 @@ func TestFileSeekerImpl_SeekFiles(t *testing.T) {
 	createTestFile(t, testSubDirTwo, "file6.txt")
 
 	fileSeeker := &fileSeekerImpl{
-		folderPath:     testFolder,
-		patterns:       []string{"file[0-9].txt"},
-		fileExtensions: []string{"jpg"},
-		useRegExp:      true,
-		includeSubdirs: true,
+		fileSeekerConfig{
+			folderPath:     testFolder,
+			patterns:       []string{"file[0-9].txt"},
+			fileExtensions: []string{"jpg"},
+			useRegExp:      true,
+			includeSubdirs: true,
+		},
 	}
 
 	files, err := fileSeeker.SeekFiles()
@@ -32,17 +34,17 @@ func TestFileSeekerImpl_SeekFiles(t *testing.T) {
 		t.Fatalf("Error seeking files: %v", err)
 	}
 
-	expectedFiles := []string{
-		testFolder + "/file1.txt",
-		testFolder + "/file2.txt",
-		testSubDirOne + "/file4.txt",
-		testSubDirOne + "/file5.jpg",
-		testSubDirTwo + "/file6.txt",
+	expectedFiles := []File{
+		NewFile(testFolder + "/file1.txt"),
+		NewFile(testFolder + "/file2.txt"),
+		NewFile(testSubDirOne + "/file4.txt"),
+		NewFile(testSubDirOne + "/file5.jpg"),
+		NewFile(testSubDirTwo + "/file6.txt"),
 	}
 	assertFilesEqual(t, expectedFiles, files)
 }
 
-func assertFilesEqual(t *testing.T, expected []string, actual []string) {
+func assertFilesEqual(t *testing.T, expected []File, actual []File) {
 	t.Helper()
 	if len(expected) != len(actual) {
 		t.Errorf("Expected %d files, but got %d", len(expected), len(actual))
@@ -50,7 +52,7 @@ func assertFilesEqual(t *testing.T, expected []string, actual []string) {
 	}
 	for i := range expected {
 		if expected[i] != actual[i] {
-			t.Errorf("Expected file: %s, but got: %s", expected[i], actual[i])
+			t.Errorf("Expected file: %v, but got: %v", expected[i], actual[i])
 		}
 	}
 }

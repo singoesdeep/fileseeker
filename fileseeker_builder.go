@@ -8,42 +8,42 @@ type FileSeekerBuilder interface {
 }
 
 type fileSeekerBuilder struct {
-	folderPath     string
-	patterns       []string
-	fileExtensions []string
-	useRegExp      bool
-	includeSubdirs bool
+	fsc fileSeekerConfig
 }
 
 func NewFileSeekerBuilder(folderPath string) FileSeekerBuilder {
 	return &fileSeekerBuilder{
-		folderPath:     folderPath,
-		includeSubdirs: true,
+		fileSeekerConfig{
+			folderPath:     folderPath,
+			includeSubdirs: true,
+		},
 	}
 }
 
 func (fsb *fileSeekerBuilder) Patterns(patterns []string) FileSeekerBuilder {
-	fsb.patterns = patterns
-	fsb.useRegExp = true
+	fsb.fsc.patterns = patterns
+	fsb.fsc.useRegExp = true
 	return fsb
 }
 
 func (fsb *fileSeekerBuilder) FileExtensions(extensions []string) FileSeekerBuilder {
-	fsb.fileExtensions = extensions
+	fsb.fsc.fileExtensions = extensions
 	return fsb
 }
 
 func (fsb *fileSeekerBuilder) ExcludeSubdirs() FileSeekerBuilder {
-	fsb.includeSubdirs = false
+	fsb.fsc.includeSubdirs = false
 	return fsb
 }
 
 func (fsb *fileSeekerBuilder) Build() FileSeeker {
 	return &fileSeekerImpl{
-		folderPath:     fsb.folderPath,
-		patterns:       fsb.patterns,
-		fileExtensions: fsb.fileExtensions,
-		useRegExp:      fsb.useRegExp,
-		includeSubdirs: fsb.includeSubdirs,
+		fileSeekerConfig{
+			folderPath:     fsb.fsc.folderPath,
+			patterns:       fsb.fsc.patterns,
+			fileExtensions: fsb.fsc.fileExtensions,
+			useRegExp:      fsb.fsc.useRegExp,
+			includeSubdirs: fsb.fsc.includeSubdirs,
+		},
 	}
 }
