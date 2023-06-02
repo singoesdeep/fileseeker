@@ -2,7 +2,6 @@ package fileseeker
 
 type FileSeekerBuilder interface {
 	Patterns([]string) FileSeekerBuilder
-	FileExtensions([]string) FileSeekerBuilder
 	ExcludeSubdirs() FileSeekerBuilder
 	Build() FileSeeker
 }
@@ -22,12 +21,6 @@ func NewFileSeekerBuilder(folderPath string) FileSeekerBuilder {
 
 func (fsb *fileSeekerBuilder) Patterns(patterns []string) FileSeekerBuilder {
 	fsb.fsc.patterns = patterns
-	fsb.fsc.useRegExp = true
-	return fsb
-}
-
-func (fsb *fileSeekerBuilder) FileExtensions(extensions []string) FileSeekerBuilder {
-	fsb.fsc.fileExtensions = extensions
 	return fsb
 }
 
@@ -41,8 +34,6 @@ func (fsb *fileSeekerBuilder) Build() FileSeeker {
 		fileSeekerConfig{
 			folderPath:     fsb.fsc.folderPath,
 			patterns:       fsb.fsc.patterns,
-			fileExtensions: fsb.fsc.fileExtensions,
-			useRegExp:      fsb.fsc.useRegExp,
 			includeSubdirs: fsb.fsc.includeSubdirs,
 		},
 	}

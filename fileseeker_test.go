@@ -23,8 +23,6 @@ func TestFileSeekerImpl_SeekFiles(t *testing.T) {
 		fileSeekerConfig{
 			folderPath:     testFolder,
 			patterns:       []string{"file[0-9].txt"},
-			fileExtensions: []string{"jpg"},
-			useRegExp:      true,
 			includeSubdirs: true,
 		},
 	}
@@ -38,7 +36,6 @@ func TestFileSeekerImpl_SeekFiles(t *testing.T) {
 		NewFile(testFolder + "/file1.txt"),
 		NewFile(testFolder + "/file2.txt"),
 		NewFile(testSubDirOne + "/file4.txt"),
-		NewFile(testSubDirOne + "/file5.jpg"),
 		NewFile(testSubDirTwo + "/file6.txt"),
 	}
 	assertFilesEqual(t, expectedFiles, files)
